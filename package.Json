@@ -1,0 +1,14 @@
+{
+  "name": "Taskfyapp",
+  "version": "1.0.0",
+  "description": "Task manager web application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.1"
+  },
+  "author": "Aly Ahmed",
+  "license": "ISC"
+}

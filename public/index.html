@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Taskfy</title>
+  <style>
+    /* CSS: Modern and polished design */
+    body {
+      margin: 0;
+      font-family: 'Roboto', Arial, sans-serif;
+      background: #f3f4f6;
+      color: #333;
+    }
+
+    .header {
+      text-align: center;
+      padding: 20px;
+      background: #6200ea;
+      color: white;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 20px auto;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .task-input {
+      display: flex;
+      flex-wrap: wrap;
+      padding: 20px;
+      background: #f8f9fa;
+      border-bottom: 2px solid #eee;
+      gap: 10px;
+    }
+
+    .task-input input,
+    .task-input textarea,
+    .task-input button,
+    .task-input select {
+      padding: 12px;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      outline: none;
+      font-size: 16px;
+      flex: 1;
+    }
+
+    .task-input button {
+      background: #6200ea;
+      color: white;
+      cursor: pointer;
+      flex: 0.3;
+      border: none;
+    }
+
+    .task-input button:hover {
+      background: #4a00b5;
+    }
+
+    .task-list {
+      list-style: none;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .task-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 5px;
+      background: #f8f9fa;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      transition: 0.2s;
+    }
+
+    .task-item:hover {
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .task-info {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .task-info .title {
+      font-weight: bold;
+      font-size: 18px;
+    }
+
+    .task-info .notes {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .task-actions button {
+      margin-left: 5px;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      color: white;
+    }
+
+    .complete-btn {
+      background: #28a745;
+    }
+
+    .delete-btn {
+      background: #dc3545;
+    }
+
+    /* Responsive design */
+    @media (max-width: 600px) {
+      .task-input {
+        flex-direction: column;
+      }
+
+      .task-input input,
+      .task-input textarea,
+      .task-input button {
+        flex: 1 0 100%;
+      }
+
+      .task-info {
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">Taskfy - Your Task Manager</div>
+  <div class="container">
+    <!-- Task Input Section -->
+    <div class="task-input">
+      <input type="text" id="taskTitle" placeholder="Task Title">
+      <textarea id="taskNotes" placeholder="Notes"></textarea>
+      <input type="date" id="taskDueDate">
+      <button id="addTask">Add Task</button>
+    </div>
+    <!-- Task List -->
+    <ul class="task-list" id="taskList"></ul>
+  </div>
+
+  <script>
+    // JavaScript: Interactive functionality
+    document.addEventListener('DOMContentLoaded', () => {
+      const taskTitle = document.getElementById('taskTitle');
+      const taskNotes = document.getElementById('taskNotes');
+      const taskDueDate = document.getElementById('taskDueDate');
+      const addTask = document.getElementById('addTask');
+      const taskList = document.getElementById('taskList');
+
+      const loadTasks = async () => {
+        const response = await fetch('/tasks');
+        const tasks = await response.json();
+        taskList.innerHTML = '';
+        tasks.forEach((task) => {
+          const li = document.createElement('li');
+          li.className = `task-item ${task.completed ? 'completed' : ''}`;
+          li.innerHTML = `
+            <div class="task-info">
+              <span class="title">${task.title}</span>
+              <span class="notes">${task.notes}</span>
+              <span class="due-date">Due: ${task.dueDate}</span>
+            </div>
+            <div class="task-actions">
+              <button class="complete-btn" onclick="toggleComplete(${task.id})">${task.completed ? 'Undo' : 'Complete'}</button>
+              <button class="delete-btn" onclick="deleteTask(${task.id})">Delete</button>
+            </div>
+          `;
+          taskList.appendChild(li);
+        });
+      };
+
+      addTask.addEventListener('click', async () => {
+        const newTask = {
+          title: taskTitle.value,
+          notes: taskNotes.value,
+          dueDate: taskDueDate.value,
+        };
+        await fetch('/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTask),
+        });
+        taskTitle.value = '';
+        taskNotes.value = '';
+        taskDueDate.value = '';
+        loadTasks();
+      });
+
+      window.toggleComplete = async (id) => {
+        await fetch(`/tasks/${id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ completed: true }),
+        });
+        loadTasks();
+      };
+
+      window.deleteTask = async (id) => {
+        await fetch(`/tasks/${id}`, { method: 'DELETE' });
+        loadTasks();
+      };
+
+      loadTasks();
+    });
+  </script>
+</body>
+</html>
